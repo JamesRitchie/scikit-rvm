@@ -1,17 +1,21 @@
 """Relevance Vector Machine classes for regression and classification."""
 import numpy as np
 
-from sklearn.base import BaseEstimator, RegressorMixin
+from scipy.optimize import minimize
+from scipy.special import expit
+
+from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 from sklearn.metrics.pairwise import (linear_kernel, rbf_kernel,
                                       polynomial_kernel)
 
 
-class RVR(BaseEstimator, RegressorMixin):
+class BaseRVM(BaseEstimator):
 
-    """Relevance Vector Machine Regression.
+    """Base Relevance Vector Machine class.
 
-    Implementation of Mike Tipping's Relevance Vector Machine for regression
-    using the scikit-learn API.
+    Implementation of Mike Tipping's Relevance Vector Machine using the
+    scikit-learn API. Add a posterior over weights method and a predict
+    in subclass to use for classification or regression.
     """
 
     def __init__(
@@ -70,15 +74,6 @@ class RVR(BaseEstimator, RegressorMixin):
 
         return phi
 
-    def _posterior(self, alpha, beta, phi, y):
-        """Compute the posterior distriubtion over weights."""
-        inv_sigma = np.diag(alpha) + beta * np.dot(phi.T, phi)
-        sigma = np.linalg.inv(inv_sigma)
-
-        m = beta * np.dot(sigma, np.dot(phi.T, y))
-
-        return m, sigma
-
     def fit(self, X, y):
         """Fit the RVR to the training data."""
         n_samples, n_features = X.shape
@@ -87,13 +82,15 @@ class RVR(BaseEstimator, RegressorMixin):
 
         n_basis_functions = phi.shape[1]
 
-        alpha = self.alpha * np.random.rand(n_basis_functions)
+        alpha = self.alpha * np.ones(n_basis_functions)
         beta = self.beta
+
+        m = np.zeros(n_basis_functions)
 
         alpha_old = alpha
 
         for i in range(self.n_iter):
-            m, sigma = self._posterior(alpha, beta, phi, y)
+            m, sigma = self._posterior(m, alpha, beta, phi, y)
 
             gamma = 1 - alpha*np.diag(sigma)
             alpha = gamma/(m ** 2)
@@ -148,6 +145,30 @@ class RVR(BaseEstimator, RegressorMixin):
 
         return self
 
+
+class RVR(BaseRVM, RegressorMixin):
+
+    """Relevance Vector Machine Regression.
+
+    Implementation of Mike Tipping's Relevance Vector Machine for regression
+    using the scikit-learn API.
+    """
+
+    def __init__(self, beta=1e-6, beta_fixed=False, **kwargs):
+        """Copy params to object properties, no validation."""
+        super(RVR, self).__init__(**kwargs)
+        self.beta = beta
+        self.beta_fixed = beta_fixed
+
+    def _posterior(self, m, alpha, beta, phi, y):
+        """Compute the posterior distriubtion over weights."""
+        inv_sigma = np.diag(alpha) + beta * np.dot(phi.T, phi)
+        sigma = np.linalg.inv(inv_sigma)
+
+        m = beta * np.dot(sigma, np.dot(phi.T, y))
+
+        return m, sigma
+
     def predict(self, X, eval_MSE=False):
         """Evaluate the RVR model at x."""
         phi = self._apply_kernel(X, self.relevance_)
@@ -159,3 +180,59 @@ class RVR(BaseEstimator, RegressorMixin):
             return y, MSE
         else:
             return y
+
+
+class RVC(BaseRVM, ClassifierMixin):
+
+    """Relevance Vector Machine Classification.
+
+    Implementation of Mike Tipping's Relevance Vector Machine for
+    classification using the scikit-learn API.
+    """
+
+    def __init__(self, n_iter_posterior=50, **kwargs):
+        """Copy params to object properties, no validation."""
+        self.n_iter_posterior = n_iter_posterior
+        super(RVC, self).__init__(**kwargs)
+
+    def _classify(self, m, phi):
+        return expit(np.dot(phi, m))
+
+    def _log_posterior(self, m, alpha, phi, t):
+        y = self._classify(m, phi)
+
+        if np.any(y[t == 1] == 0) or np.any(y[t == 0] == 1):
+            log_p = float('inf')
+        else:
+            log_p = -1 * (np.sum(np.log(y[t == 1]) + np.log(1-y[t == 0]), 0))
+            log_p = log_p + 0.5*np.dot(m.T, np.dot(np.diag(alpha), m))
+
+        jacobian = np.dot(np.diag(alpha), m) - np.dot(phi.T, (t-y))
+
+        return log_p, jacobian
+
+    def _posterior(self, m, alpha, beta, phi, t):
+
+        y = self._classify(m, phi)
+        print("Y: {}".format(y))
+
+        result = minimize(
+            fun=self._log_posterior,
+            x0=m,
+            args=(alpha, phi, t),
+            method='BFGS',
+            jac=True
+        )
+
+        m = result.x
+        print("Min weights: {}".format(m))
+        sigma = result.hess_inv
+        return m, sigma
+
+    def predict_proba(self, X):
+        phi = self._apply_kernel(X, self.relevance_)
+        return self._classify(self.m_, phi)
+
+    def predict(self, X):
+        y = self.predict_proba(X)
+        return y > 0.5
