@@ -14,6 +14,7 @@ install:
   - conda create -q -n test-environment python=3.4 numpy==1.9.2 scipy==0.15.1 scikit-learn==0.16.1 nose coverage pip
   - source activate test-environment
   - pip install coveralls
+  - python setup.py install
 
 # command to run tests
 script: nosetests -c nose.cfg
