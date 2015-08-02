@@ -16,8 +16,8 @@ machine learning technique using the `scikit-learn`_ API.
 Quickstart
 ==========
 
-
 With NumPy, SciPy and scikit-learn available in your environment, install with::
+
     pip install https://github.com/JamesRitchie/scikit-rvm/archive/master.zip
 
 Regression is done with the RVR class::
@@ -75,7 +75,7 @@ Future Improvements
 
 
 * Implement the fast Sequential Sparse Bayesian Learning Algorithm outlined in
-   Section 7.2.3 of `Pattern Recognition and Machine Learning`_
+  Section 7.2.3 of `Pattern Recognition and Machine Learning`_
 * Handle ill-conditioning errors more gracefully.
 * Implement more kernel choices.
 * Create more detailed examples with IPython notebooks.
