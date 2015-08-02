@@ -12,9 +12,9 @@ scikit-rvm
 scikit-rvm is a Python module implementing the `Relevance Vector Machine`_ (RVM)
 machine learning technique using the `scikit-learn`_ API.
 
-**********
+==========
 Quickstart
-**********
+==========
 
 With NumPy, SciPy and scikit-learn available in your environment, install with::
     pip install https://github.com/JamesRitchie/scikit-rvm/archive/master.zip
@@ -44,9 +44,9 @@ Classification is done with the RVC class::
     >>> clf.score(iris.data, iris.target)
     0.97999999999999998
 
-******
+======
 Theory
-******
+======
 
 The RVM is a sparse Bayesian analogue to the Support Vector Machine, with a
 number of advantages:
@@ -68,9 +68,9 @@ Most of this implementation was written working from Section 7.2 of Christopher
 M. Bishops's `Pattern Recognition and Machine Learning`_.
 
 
-*******************
+===================
 Future Improvements
-*******************
+===================
 
 * Implement the fast Sequential Sparse Bayesian Learning Algorithm outlined in
    Section 7.2.3 of `Pattern Recognition and Machine Learning`_
