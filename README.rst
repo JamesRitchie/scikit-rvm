@@ -16,6 +16,7 @@ machine learning technique using the `scikit-learn`_ API.
 Quickstart
 ==========
 
+
 With NumPy, SciPy and scikit-learn available in your environment, install with::
     pip install https://github.com/JamesRitchie/scikit-rvm/archive/master.zip
 
@@ -71,6 +72,7 @@ M. Bishops's `Pattern Recognition and Machine Learning`_.
 ===================
 Future Improvements
 ===================
+
 
 * Implement the fast Sequential Sparse Bayesian Learning Algorithm outlined in
    Section 7.2.3 of `Pattern Recognition and Machine Learning`_
