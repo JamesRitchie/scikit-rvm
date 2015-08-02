@@ -4,6 +4,10 @@ scikit-rvm
 
 .. image:: https://travis-ci.org/JamesRitchie/scikit-rvm.svg?branch=master
     :target: https://travis-ci.org/JamesRitchie/scikit-rvm
+.. image:: https://coveralls.io/repos/JamesRitchie/scikit-rvm/badge.svg?branch=master&service=github
+  :target: https://coveralls.io/github/JamesRitchie/scikit-rvm?branch=master
+
+
 
 scikit-rvm is a Python module implementing the `Relevance Vector Machine`_ (RVM)
 machine learning technique using the `scikit-learn`_ API.
