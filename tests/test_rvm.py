@@ -268,7 +268,7 @@ class RVRTestCase(TestCase):
 
     def test_fit(self):
         """Check the fit function works correctly."""
-        clf = RVR(kernel='linear', verbose=True)
+        clf = RVR(kernel='linear', threshold_alpha=1e3, verbose=True)
 
         X = np.array([
             [1],
@@ -276,10 +276,12 @@ class RVRTestCase(TestCase):
             [3],
         ])
         y = np.array([1, 2, 3])
+        np.random.seed(1)
+        y = y + 0.1 * np.random.randn(y.shape[0])
 
         clf.fit(X, y)
 
-        m_target = np.array([0.044487, 0.158207, 0.213033])
+        m_target = np.array([0.065906, 0.131813, 0.197719, 0.159155])
 
         np.testing.assert_array_equal(clf.relevance_, X)
         np.testing.assert_allclose(clf.m_, m_target, rtol=1e-3)
