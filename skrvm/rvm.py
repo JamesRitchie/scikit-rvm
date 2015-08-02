@@ -284,11 +284,12 @@ class RVC(BaseRVM, ClassifierMixin):
         elif n_classes == 2:
             t = np.zeros(y.shape)
             t[y == self.classes_[1]] = 1
-            super(RVC, self).fit(X, t)
+            return super(RVC, self).fit(X, t)
         else:
             self.multi_ = None
             self.multi_ = OneVsOneClassifier(self)
             self.multi_.fit(X, y)
+            return self
 
     def predict_proba(self, X):
         """Return an array of class probabilities."""
