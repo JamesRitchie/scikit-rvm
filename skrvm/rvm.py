@@ -103,9 +103,9 @@ class BaseRVM(BaseEstimator):
 
         return phi
 
-    def _prune(self, alpha, alpha_old, gamma, phi, sigma, m, X):
+    def _prune(self):
         """Remove basis functions based on alpha values."""
-        keep_alpha = alpha < self.threshold_alpha
+        keep_alpha = self.alpha_ < self.threshold_alpha
 
         if not np.any(keep_alpha):
             keep_alpha[0] = True
@@ -115,18 +115,16 @@ class BaseRVM(BaseEstimator):
         if self.bias_used:
             if not keep_alpha[-1]:
                 self.bias_used = False
-            X = X[keep_alpha[:-1]]
+            self.relevance_ = self.relevance_[keep_alpha[:-1]]
         else:
-            X = X[keep_alpha]
+            self.relevance_ = self.relevance_[keep_alpha]
 
-        alpha = alpha[keep_alpha]
-        alpha_old = alpha_old[keep_alpha]
-        gamma = gamma[keep_alpha]
-        phi = phi[:, keep_alpha]
-        sigma = sigma[np.ix_(keep_alpha, keep_alpha)]
-        m = m[keep_alpha]
-
-        return alpha, alpha_old, gamma, phi, sigma, m, X
+        self.alpha_ = self.alpha_[keep_alpha]
+        self.alpha_old = self.alpha_old[keep_alpha]
+        self.gamma = self.gamma[keep_alpha]
+        self.phi = self.phi[:, keep_alpha]
+        self.sigma_ = self.sigma_[np.ix_(keep_alpha, keep_alpha)]
+        self.m_ = self.m_[keep_alpha]
 
     def fit(self, X, y):
         """Fit the RVR to the training data."""
@@ -134,57 +132,52 @@ class BaseRVM(BaseEstimator):
 
         n_samples, n_features = X.shape
 
-        phi = self._apply_kernel(X, X)
+        self.phi = self._apply_kernel(X, X)
 
-        n_basis_functions = phi.shape[1]
+        n_basis_functions = self.phi.shape[1]
 
-        alpha = self.alpha * np.ones(n_basis_functions)
-        beta = self.beta
+        self.relevance_ = X
+        self.y = y
 
-        m = np.zeros(n_basis_functions)
+        self.alpha_ = self.alpha * np.ones(n_basis_functions)
+        self.beta_ = self.beta
 
-        alpha_old = alpha
+        self.m_ = np.zeros(n_basis_functions)
+
+        self.alpha_old = self.alpha_
 
         for i in range(self.n_iter):
-            m, sigma = self._posterior(m, alpha, beta, phi, y)
+            self._posterior()
 
-            gamma = 1 - alpha*np.diag(sigma)
-            alpha = gamma/(m ** 2)
+            self.gamma = 1 - self.alpha_*np.diag(self.sigma_)
+            self.alpha_ = self.gamma/(self.m_ ** 2)
 
             if not self.beta_fixed:
-                beta = (n_samples - np.sum(gamma))/(
-                    np.sum((y - np.dot(phi, m)) ** 2))
+                self.beta_ = (n_samples - np.sum(self.gamma))/(
+                    np.sum((y - np.dot(self.phi, self.m_)) ** 2))
 
-            pruned = self._prune(alpha, alpha_old, gamma, phi, sigma, m, X)
-            alpha, alpha_old, gamma, phi, sigma, m, X = pruned
+            self._prune()
 
             if self.verbose:
                 print("Iteration: {}".format(i))
-                print("Alpha: {}".format(alpha))
-                print("Beta: {}".format(beta))
-                print("Gamma: {}".format(gamma))
-                print("m: {}".format(m))
-                print("Relevance Vectors: {}".format(X.shape[0]))
+                print("Alpha: {}".format(self.alpha_))
+                print("Beta: {}".format(self.beta_))
+                print("Gamma: {}".format(self.gamma))
+                print("m: {}".format(self.m_))
+                print("Relevance Vectors: {}".format(self.relevance_.shape[0]))
                 print()
 
-            delta = np.amax(np.absolute(alpha - alpha_old))
+            delta = np.amax(np.absolute(self.alpha_ - self.alpha_old))
 
             if delta < self.tol and i > 1:
                 break
 
-            alpha_old = alpha
-
-        self.alpha_ = alpha
-        self.beta_ = beta
-        self.sigma_ = sigma
+            self.alpha_old = self.alpha_
 
         if self.bias_used:
-            self.bias = m[-1]
+            self.bias = self.m_[-1]
         else:
             self.bias = None
-
-        self.m_ = m
-        self.relevance_ = X
 
         return self
 
@@ -197,13 +190,11 @@ class RVR(BaseRVM, RegressorMixin):
     using the scikit-learn API.
     """
 
-    def _posterior(self, m, alpha, beta, phi, y):
+    def _posterior(self):
         """Compute the posterior distriubtion over weights."""
-        inv_sigma = np.diag(alpha) + beta * np.dot(phi.T, phi)
-        sigma = np.linalg.inv(inv_sigma)
-        m = beta * np.dot(sigma, np.dot(phi.T, y))
-
-        return m, sigma
+        i_s = np.diag(self.alpha_) + self.beta_ * np.dot(self.phi.T, self.phi)
+        self.sigma_ = np.linalg.inv(i_s)
+        self.m_ = self.beta_ * np.dot(self.sigma_, np.dot(self.phi.T, self.y))
 
     def predict(self, X, eval_MSE=False):
         """Evaluate the RVR model at x."""
@@ -256,13 +247,12 @@ class RVC(BaseRVM, ClassifierMixin):
         B = np.diag(y*(1-y))
         return np.diag(alpha) + np.dot(phi.T, np.dot(B, phi))
 
-    def _posterior(self, m, alpha, beta, phi, t):
-
+    def _posterior(self):
         result = minimize(
             fun=self._log_posterior,
             hess=self._hessian,
-            x0=m,
-            args=(alpha, phi, t),
+            x0=self.m_,
+            args=(self.alpha_, self.phi, self.t),
             method='Newton-CG',
             jac=True,
             options={
@@ -270,9 +260,10 @@ class RVC(BaseRVM, ClassifierMixin):
             }
         )
 
-        m = result.x
-        sigma = np.linalg.inv(self._hessian(m, alpha, phi, t))
-        return m, sigma
+        self.m_ = result.x
+        self.sigma_ = np.linalg.inv(
+            self._hessian(self.m_, self.alpha_, self.phi, self.t)
+        )
 
     def fit(self, X, y):
         """Check target values and fit model."""
@@ -282,9 +273,9 @@ class RVC(BaseRVM, ClassifierMixin):
         if n_classes < 2:
             raise ValueError("Need 2 or more classes.")
         elif n_classes == 2:
-            t = np.zeros(y.shape)
-            t[y == self.classes_[1]] = 1
-            return super(RVC, self).fit(X, t)
+            self.t = np.zeros(y.shape)
+            self.t[y == self.classes_[1]] = 1
+            return super(RVC, self).fit(X, self.t)
         else:
             self.multi_ = None
             self.multi_ = OneVsOneClassifier(self)

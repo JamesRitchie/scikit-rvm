@@ -237,14 +237,14 @@ class RVRTestCase(TestCase):
         x = np.array([[1, 2], [3, 4]])
         y = np.array([[5, 6], [7, 8]])
 
-        phi = clf._apply_kernel(x, y)
+        clf.phi = clf._apply_kernel(x, y)
 
-        alpha = np.ones(3)
-        m = np.ones(3)
-        beta = 1
-        y = np.array([1, 1])
+        clf.alpha_ = np.ones(3)
+        clf.m_ = np.ones(3)
+        clf.beta_ = 1
+        clf.y = np.array([1, 1])
 
-        m, sigma = clf._posterior(m, alpha, beta, phi, y)
+        clf._posterior()
 
         m_target = np.array([6.103885e-03, 3.750334e-08, 6.666294e-01])
         sigma_target = np.array([
@@ -253,8 +253,8 @@ class RVRTestCase(TestCase):
             [-6.103885e-03, -3.750334e-08, 3.333706e-01]
         ])
 
-        np.testing.assert_allclose(m, m_target)
-        np.testing.assert_allclose(sigma, sigma_target)
+        np.testing.assert_allclose(clf.m_, m_target)
+        np.testing.assert_allclose(clf.sigma_, sigma_target)
 
     def test_predict(self):
         """Check the predict function works with pre-set values."""
@@ -422,14 +422,14 @@ class RVCTestCase(TestCase):
         x = np.array([[1, 2], [3, 4]])
         y = np.array([[5, 6], [7, 8]])
 
-        phi = clf._apply_kernel(x, y)
+        clf.phi = clf._apply_kernel(x, y)
 
-        alpha = np.ones(3)
-        m = np.ones(3)
-        t = np.array([1, 0])
-        beta = None
+        clf.alpha_ = np.ones(3)
+        clf.m_ = np.ones(3)
+        clf.t = np.array([1, 0])
+        clf.beta_ = None
 
-        m, sigma = clf._posterior(m, alpha, beta, phi, t)
+        clf._posterior()
 
         m_target = np.array([-9.157e-03,  -5.049e-08,   2.794e-05])
         sigma_target = np.array([
@@ -438,8 +438,8 @@ class RVCTestCase(TestCase):
             [-3.052e-03, -1.875e-08, 6.667e-01]
         ])
 
-        np.testing.assert_allclose(m, m_target, rtol=1e-3)
-        np.testing.assert_allclose(sigma, sigma_target, rtol=1e-3)
+        np.testing.assert_allclose(clf.m_, m_target, rtol=1e-3)
+        np.testing.assert_allclose(clf.sigma_, sigma_target, rtol=1e-3)
 
     def test_fit_one_class(self):
         """Check that fitting with only one class raises an exception."""
@@ -541,7 +541,7 @@ class RVCTestCase(TestCase):
 
         prob = clf.predict_proba(X[0, :])
         p_target = np.array([[0.999, 5.538e-4]])
-        np.testing.assert_allclose(prob, p_target, rtol=1e-2)
+        np.testing.assert_allclose(prob, p_target, rtol=1e-2, atol=1e-2)
 
     def test_classification_three_classes(self):
         """Check classification works with three classes."""
