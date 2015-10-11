@@ -438,7 +438,7 @@ class RVCTestCase(TestCase):
             [-3.052e-03, -1.875e-08, 6.667e-01]
         ])
 
-        np.testing.assert_allclose(clf.m_, m_target, rtol=1e-3)
+        np.testing.assert_allclose(clf.m_, m_target, rtol=1e-3, atol=1e-3)
         np.testing.assert_allclose(clf.sigma_, sigma_target, rtol=1e-3)
 
     def test_fit_one_class(self):

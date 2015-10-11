@@ -250,10 +250,9 @@ class RVC(BaseRVM, ClassifierMixin):
     def _posterior(self):
         result = minimize(
             fun=self._log_posterior,
-            hess=self._hessian,
             x0=self.m_,
             args=(self.alpha_, self.phi, self.t),
-            method='Newton-CG',
+            method='L-BFGS-B',
             jac=True,
             options={
                 'maxiter': self.n_iter_posterior
