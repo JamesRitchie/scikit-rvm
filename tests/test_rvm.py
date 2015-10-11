@@ -541,7 +541,7 @@ class RVCTestCase(TestCase):
 
         prob = clf.predict_proba(X[0, :])
         p_target = np.array([[0.999, 5.538e-4]])
-        np.testing.assert_allclose(prob, p_target, rtol=0.5e-1)
+        np.testing.assert_allclose(prob, p_target, rtol=1e-2, atol=1e-2)
 
     def test_classification_three_classes(self):
         """Check classification works with three classes."""
