@@ -68,6 +68,12 @@ in general) on a `dedicated page`_, along with a Matlab implementation.
 Most of this implementation was written working from Section 7.2 of Christopher
 M. Bishops's `Pattern Recognition and Machine Learning`_.
 
+============
+Contributors
+============
+
+* `James Ritchie`_
+* `Jonathan Feinberg`_
 
 ===================
 Future Improvements
@@ -85,3 +91,5 @@ Future Improvements
 .. _scikit-learn: http://scikit-learn.org/
 .. _Pattern Recognition and Machine Learning: http://research.microsoft.com/en-us/um/people/cmbishop/prml/
 .. _dedicated page: http://www.miketipping.com/sparsebayes.htm
+.. _James Ritchie: https://github.com/JamesRitchie
+.. _Jonathan Feinberg: https://github.com/jonathf

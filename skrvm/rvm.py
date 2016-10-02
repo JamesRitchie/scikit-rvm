@@ -235,7 +235,8 @@ class RVC(BaseRVM, ClassifierMixin):
 
         y = self._classify(m, phi)
 
-        log_p = -1 * (np.sum(np.log(y[t == 1]) + np.log(1-y[t == 0]), 0))
+        log_p = -1 * (np.sum(np.log(y[t == 1]), 0) +
+                      np.sum(np.log(1-y[t == 0]), 0))
         log_p = log_p + 0.5*np.dot(m.T, np.dot(np.diag(alpha), m))
 
         jacobian = np.dot(np.diag(alpha), m) - np.dot(phi.T, (t-y))

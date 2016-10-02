@@ -473,6 +473,23 @@ class RVCTestCase(TestCase):
         clf.fit(X, y)
         np.testing.assert_array_equal(clf.classes_, np.array(['A', 'B']))
 
+    def test_fit_two_classes_imbalanced(self):
+        """Check that fitting with two classes works with unequal samples."""
+        clf = RVC()
+
+        X = np.array([
+            [1, 2],
+            [1, 4],
+            [4, 2],
+            [2, 1],
+            [3, 1.5],
+
+        ])
+
+        y = np.array(['A', 'A', 'B', 'B', 'B'])
+        clf.fit(X, y)
+        np.testing.assert_array_equal(clf.classes_, np.array(['A', 'B']))
+
     def test_fit_three_classes(self):
         """Check that fitting with three classes uses OneVSOne."""
         clf = RVC()
