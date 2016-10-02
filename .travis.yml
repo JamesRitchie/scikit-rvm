@@ -8,11 +8,10 @@ install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
-  - conda install libgfortran==1
   # Useful for debugging any issues with conda
   - conda info -a
 
-  - conda create -q -n test-environment python=3.4 numpy==1.9.2 scipy==0.15.1 scikit-learn==0.16.1 nose coverage pip
+  - conda create -q -n test-environment python=3.4 numpy==1.9.2 scipy==0.15.1 scikit-learn==0.16.1 nose coverage pip libgfortran
   - source activate test-environment
   - pip install coveralls
   - python setup.py install
