@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scikit-rvm"
+version = "0.1.0a1"
+description = "Relevance Vector Machine implementation using the scikit-learn API"
+readme = "README.rst"
+authors = [
+  { name = "James Ritchie", email = "james.a.ritchie@gmail.com" },
+]
+license = { text = "BSD" }
+keywords = ["machine-learning", "rvm", "sparse", "bayesian", "scikit-learn"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "License :: OSI Approved :: BSD License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+]
+dependencies = [
+  "numpy>=1.9.2",
+  "scipy>=0.15.1",
+  "scikit-learn>=0.16.1",
+]
+
+[tool.setuptools.packages.find]
+exclude = ["tests*"]
+
+# uv-specific configuration
+[tool.uv]
+dev-dependencies = [
+  "coverage>=3.7.1",
+]
+
