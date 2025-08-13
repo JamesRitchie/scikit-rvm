@@ -2,10 +2,10 @@
 scikit-rvm
 ##########
 
-.. image:: https://travis-ci.org/JamesRitchie/scikit-rvm.svg?branch=master
-    :target: https://travis-ci.org/JamesRitchie/scikit-rvm
-.. image:: https://coveralls.io/repos/JamesRitchie/scikit-rvm/badge.svg?branch=master&service=github
-  :target: https://coveralls.io/github/JamesRitchie/scikit-rvm?branch=master
+.. image:: https://github.com/JamesRitchie/scikit-rvm/actions/workflows/ci.yml/badge.svg?branch=master
+    :target: https://github.com/JamesRitchie/scikit-rvm/actions/workflows/ci.yml
+..
+  
 
 
 
