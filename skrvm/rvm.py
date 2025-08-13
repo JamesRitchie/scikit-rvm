@@ -77,7 +77,13 @@ class BaseRVM(BaseEstimator):
         return self
 
     def _apply_kernel(self, x, y):
-        """Apply the selected kernel function to the data."""
+        """Apply the selected kernel function to the data.
+
+        Ensures inputs are 2D to satisfy newer scikit-learn pairwise APIs
+        when users pass a single sample as a 1D array.
+        """
+        if isinstance(x, np.ndarray) and x.ndim == 1:
+            x = x.reshape(1, -1)
         if self.kernel == 'linear':
             phi = linear_kernel(x, y)
         elif self.kernel == 'rbf':
@@ -198,14 +204,19 @@ class RVR(BaseRVM, RegressorMixin):
 
     def predict(self, X, eval_MSE=False):
         """Evaluate the RVR model at x."""
+        single_sample = isinstance(X, np.ndarray) and X.ndim == 1
         phi = self._apply_kernel(X, self.relevance_)
 
         y = np.dot(phi, self.m_)
 
         if eval_MSE:
             MSE = (1/self.beta_) + np.dot(phi, np.dot(self.sigma_, phi.T))
+            if single_sample:
+                return y[0], MSE[0, 0]
             return y, MSE[:, 0]
         else:
+            if single_sample:
+                return y[0]
             return y
 
 
