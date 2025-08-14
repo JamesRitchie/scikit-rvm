@@ -32,4 +32,19 @@ exclude = ["tests*"]
 [tool.uv]
 dev-dependencies = [
   "coverage>=7",
+  "ruff>=0.5",
 ]
+
+# Ruff configuration
+[tool.ruff]
+line-length = 100
+src = ["skrvm", "tests"]
+exclude = [
+  ".venv",
+  "build",
+  "dist",
+  "__pycache__",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["skrvm"]
