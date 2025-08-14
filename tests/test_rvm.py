@@ -1,23 +1,22 @@
 """Relevance vector machine classes."""
+
 from unittest import TestCase
 
 import numpy as np
-
 from sklearn.datasets import load_iris
 from sklearn.multiclass import OneVsOneClassifier
 
-from skrvm import RVR, RVC
+from skrvm import RVC, RVR
 from skrvm.rvm import BaseRVM
 
 
 class BaseRVMTestCase(TestCase):
-
     """Automatic tests for the BaseRVM class."""
 
     def setUp(self):
         """Set up some common test instances."""
         self.param_test_clf = BaseRVM(
-            kernel='linear',
+            kernel="linear",
             degree=1,
             coef1=2,
             coef0=3,
@@ -28,12 +27,12 @@ class BaseRVMTestCase(TestCase):
             beta=1e-3,
             beta_fixed=True,
             bias_used=False,
-            verbose=True
+            verbose=True,
         )
 
     def test__init__(self):
         """Check parameters are initialized correctly."""
-        self.assertEqual(self.param_test_clf.kernel, 'linear')
+        self.assertEqual(self.param_test_clf.kernel, "linear")
         self.assertEqual(self.param_test_clf.degree, 1)
         self.assertEqual(self.param_test_clf.coef1, 2)
         self.assertEqual(self.param_test_clf.coef0, 3)
@@ -50,41 +49,44 @@ class BaseRVMTestCase(TestCase):
         """Check get_params returns a dictionary of the params."""
         params = self.param_test_clf.get_params()
 
-        self.assertEqual(params, {
-            'kernel': 'linear',
-            'degree': 1,
-            'coef1': 2,
-            'coef0': 3,
-            'n_iter': 200,
-            'tol': 1e-1,
-            'alpha': 1e-2,
-            'threshold_alpha': 1e3,
-            'beta': 1e-3,
-            'beta_fixed': True,
-            'bias_used': False,
-            'verbose': True
-        })
+        self.assertEqual(
+            params,
+            {
+                "kernel": "linear",
+                "degree": 1,
+                "coef1": 2,
+                "coef0": 3,
+                "n_iter": 200,
+                "tol": 1e-1,
+                "alpha": 1e-2,
+                "threshold_alpha": 1e3,
+                "beta": 1e-3,
+                "beta_fixed": True,
+                "bias_used": False,
+                "verbose": True,
+            },
+        )
 
     def test_set_params(self):
         """Check that set_params sets params from dictionary."""
         params = {
-            'kernel': 'poly',
-            'degree': 4,
-            'coef1': 5,
-            'coef0': 6,
-            'n_iter': 100,
-            'tol': 1e-4,
-            'alpha': 1e-5,
-            'threshold_alpha': 1e6,
-            'beta': 1e-6,
-            'beta_fixed': False,
-            'bias_used': True,
-            'verbose': False
+            "kernel": "poly",
+            "degree": 4,
+            "coef1": 5,
+            "coef0": 6,
+            "n_iter": 100,
+            "tol": 1e-4,
+            "alpha": 1e-5,
+            "threshold_alpha": 1e6,
+            "beta": 1e-6,
+            "beta_fixed": False,
+            "bias_used": True,
+            "verbose": False,
         }
 
         self.param_test_clf.set_params(**params)
 
-        self.assertEqual(self.param_test_clf.kernel, 'poly')
+        self.assertEqual(self.param_test_clf.kernel, "poly")
         self.assertEqual(self.param_test_clf.degree, 4)
         self.assertEqual(self.param_test_clf.coef1, 5)
         self.assertEqual(self.param_test_clf.coef0, 6)
@@ -99,7 +101,7 @@ class BaseRVMTestCase(TestCase):
 
     def test_apply_kernel_linear(self):
         """Check linear kernel is applied correctly."""
-        clf = BaseRVM(kernel='linear', bias_used=False)
+        clf = BaseRVM(kernel="linear", bias_used=False)
 
         x = np.array([[1, 2], [3, 4]])
         y = np.array([[5, 6], [7, 8]])
@@ -111,39 +113,33 @@ class BaseRVMTestCase(TestCase):
 
     def test_apply_kernel_rbf(self):
         """Check RBF kernel is applied correctly."""
-        clf = BaseRVM(kernel='rbf', bias_used=False, coef1=0.5)
+        clf = BaseRVM(kernel="rbf", bias_used=False, coef1=0.5)
 
         x = np.array([[1, 2], [3, 4]])
         y = np.array([[5, 6], [7, 8]])
 
         phi = clf._apply_kernel(x, y)
-        target = np.array([
-            [1.12535175e-07, 2.31952283e-16],
-            [1.83156389e-02, 1.12535175e-07]
-        ])
+        target = np.array([[1.12535175e-07, 2.31952283e-16], [1.83156389e-02, 1.12535175e-07]])
 
         np.testing.assert_allclose(phi, target)
 
     def test_apply_kernel_poly(self):
         """Check polynomial kernel is applied correctly."""
-        clf = BaseRVM(kernel='poly', bias_used=False, degree=2, coef1=1,
-                      coef0=0.5)
+        clf = BaseRVM(kernel="poly", bias_used=False, degree=2, coef1=1, coef0=0.5)
 
         x = np.array([[1, 2], [3, 4]])
         y = np.array([[5, 6], [7, 8]])
 
         phi = clf._apply_kernel(x, y)
-        target = np.array([
-            [306.25, 552.25],
-            [1560.25, 2862.25]
-        ])
+        target = np.array([[306.25, 552.25], [1560.25, 2862.25]])
 
         np.testing.assert_allclose(phi, target)
 
     def test_apply_kernel_custom(self):
         """Check custom kernels are applied correctly."""
+
         def custom(x, y):
-            return 2*x.dot(y.T)
+            return 2 * x.dot(y.T)
 
         clf = BaseRVM(kernel=custom, bias_used=False)
 
@@ -157,22 +153,19 @@ class BaseRVMTestCase(TestCase):
 
     def test_apply_kernel_bias(self):
         """Check the kernel function correctly applies a bias."""
-        clf = BaseRVM(kernel='linear', bias_used=True)
+        clf = BaseRVM(kernel="linear", bias_used=True)
 
         x = np.array([[1, 2], [3, 4]])
         y = np.array([[5, 6], [7, 8]])
 
         phi = clf._apply_kernel(x, y)
-        target = np.array([
-            [17, 23, 1],
-            [39, 53, 1]
-        ])
+        target = np.array([[17, 23, 1], [39, 53, 1]])
 
         np.testing.assert_array_equal(phi, target)
 
     def test_apply_kernel_invalid(self):
         """Check that an invalid kernel choice raises an exception."""
-        clf = BaseRVM(kernel='wrong')
+        clf = BaseRVM(kernel="wrong")
 
         x = np.array([[1, 2], [3, 4]])
         y = np.array([[5, 6], [7, 8]])
@@ -186,6 +179,7 @@ class BaseRVMTestCase(TestCase):
 
     def test_apply_kernel_1D(self):
         """Check that _apply_kernel catches a non-2D phi."""
+
         def custom(x, y):
             return np.array([1, 2])
 
@@ -197,15 +191,13 @@ class BaseRVMTestCase(TestCase):
         try:
             clf._apply_kernel(x, y)
         except ValueError as error:
-            self.assertEqual(
-                str(error),
-                "Custom kernel function did not return 2D matrix"
-            )
+            self.assertEqual(str(error), "Custom kernel function did not return 2D matrix")
         else:
             self.fail()
 
     def test_apply_kernel_row_mismatch(self):
         """Check that _apply_kernel catches a mismatch between input/output."""
+
         def custom(x, y):
             return np.array([[1, 2]])
 
@@ -220,14 +212,13 @@ class BaseRVMTestCase(TestCase):
             self.assertEqual(
                 str(error),
                 """Custom kernel function did not return matrix with rows"""
-                """ equal to number of data points."""
+                """ equal to number of data points.""",
             )
         else:
             self.fail()
 
 
 class RVRTestCase(TestCase):
-
     """Tests for the RVR class."""
 
     def test_posterior(self):
@@ -247,18 +238,20 @@ class RVRTestCase(TestCase):
         clf._posterior()
 
         m_target = np.array([6.103885e-03, 3.750334e-08, 6.666294e-01])
-        sigma_target = np.array([
-            [9.997764e-01, -1.373791e-09, -6.103885e-03],
-            [-1.373791e-09, 1.000000e+00, -3.750334e-08],
-            [-6.103885e-03, -3.750334e-08, 3.333706e-01]
-        ])
+        sigma_target = np.array(
+            [
+                [9.997764e-01, -1.373791e-09, -6.103885e-03],
+                [-1.373791e-09, 1.000000e00, -3.750334e-08],
+                [-6.103885e-03, -3.750334e-08, 3.333706e-01],
+            ]
+        )
 
         np.testing.assert_allclose(clf.m_, m_target)
         np.testing.assert_allclose(clf.sigma_, sigma_target)
 
     def test_predict(self):
         """Check the predict function works with pre-set values."""
-        clf = RVR(kernel='linear', bias_used=False)
+        clf = RVR(kernel="linear", bias_used=False)
 
         clf.relevance_ = np.array([[1, 1]])
         clf.m_ = np.array([1])
@@ -268,13 +261,15 @@ class RVRTestCase(TestCase):
 
     def test_fit(self):
         """Check the fit function works correctly."""
-        clf = RVR(kernel='linear', threshold_alpha=1e3, verbose=True)
+        clf = RVR(kernel="linear", threshold_alpha=1e3, verbose=True)
 
-        X = np.array([
-            [1],
-            [2],
-            [3],
-        ])
+        X = np.array(
+            [
+                [1],
+                [2],
+                [3],
+            ]
+        )
         y = np.array([1, 2, 3])
         np.random.seed(1)
         y = y + 0.1 * np.random.randn(y.shape[0])
@@ -288,7 +283,7 @@ class RVRTestCase(TestCase):
 
     def test_regression_linear(self):
         """Check regression works with a linear function."""
-        clf = RVR(kernel='linear', alpha=1e11)
+        clf = RVR(kernel="linear", alpha=1e11)
 
         x = np.arange(1, 100)
         y = x + 5
@@ -310,7 +305,7 @@ class RVRTestCase(TestCase):
 
     def test_regression_linear_noise(self):
         """Check regression works with a linear function with added noise."""
-        clf = RVR(kernel='linear', alpha=1e11)
+        clf = RVR(kernel="linear", alpha=1e11)
 
         x = np.arange(1, 101)
         y = x + 5
@@ -350,8 +345,14 @@ class RVRTestCase(TestCase):
         score = clf.score(X, y)
 
         m_target = [
-            1.117655e+00, -6.334513e-01, 5.868671e-01, -4.370936e-01,
-            2.320311e-01, -4.638864e-05, -7.505325e-02, 6.133291e-02
+            1.117655e00,
+            -6.334513e-01,
+            5.868671e-01,
+            -4.370936e-01,
+            2.320311e-01,
+            -4.638864e-05,
+            -7.505325e-02,
+            6.133291e-02,
         ]
 
         self.assertGreater(score, 0.85)
@@ -364,7 +365,6 @@ class RVRTestCase(TestCase):
 
 
 class RVCTestCase(TestCase):
-
     """Test cases for the RVC class."""
 
     def test__init__(self):
@@ -387,7 +387,7 @@ class RVCTestCase(TestCase):
 
         log_p, jacobian = clf._log_posterior(m, alpha, phi, t)
 
-        j_target = np.array([1.013, 1,  1.466])
+        j_target = np.array([1.013, 1, 1.466])
 
         self.assertAlmostEqual(log_p, 3.140, places=3)
         np.testing.assert_allclose(jacobian, j_target, rtol=1e-3)
@@ -407,11 +407,9 @@ class RVCTestCase(TestCase):
 
         hessian = clf._hessian(m, alpha, phi, t)
 
-        h_target = np.array([
-            [1, 4.018e-10, 3.571e-03],
-            [4.018e-10, 1,   2.194e-08],
-            [3.571e-03, 2.194e-08, 1.392]
-        ])
+        h_target = np.array(
+            [[1, 4.018e-10, 3.571e-03], [4.018e-10, 1, 2.194e-08], [3.571e-03, 2.194e-08, 1.392]]
+        )
 
         np.testing.assert_allclose(hessian, h_target, rtol=1e-3)
 
@@ -431,12 +429,14 @@ class RVCTestCase(TestCase):
 
         clf._posterior()
 
-        m_target = np.array([-9.157e-03,  -5.049e-08,   2.794e-05])
-        sigma_target = np.array([
-            [1, -4.294e-10, -3.052e-03],
-            [-4.294e-10, 1, -1.875e-08],
-            [-3.052e-03, -1.875e-08, 6.667e-01]
-        ])
+        m_target = np.array([-9.157e-03, -5.049e-08, 2.794e-05])
+        sigma_target = np.array(
+            [
+                [1, -4.294e-10, -3.052e-03],
+                [-4.294e-10, 1, -1.875e-08],
+                [-3.052e-03, -1.875e-08, 6.667e-01],
+            ]
+        )
 
         np.testing.assert_allclose(clf.m_, m_target, rtol=1e-3)
         np.testing.assert_allclose(clf.sigma_, sigma_target, rtol=1e-3)
@@ -445,12 +445,9 @@ class RVCTestCase(TestCase):
         """Check that fitting with only one class raises an exception."""
         clf = RVC()
 
-        X = np.array([
-            [1, 2],
-            [2, 1]
-        ])
+        X = np.array([[1, 2], [2, 1]])
 
-        y = np.array(['A', 'A'])
+        y = np.array(["A", "A"])
 
         try:
             clf.fit(X, y)
@@ -463,81 +460,73 @@ class RVCTestCase(TestCase):
         """Check that fitting with two classes works directly."""
         clf = RVC()
 
-        X = np.array([
-            [1, 2],
-            [2, 1]
-        ])
+        X = np.array([[1, 2], [2, 1]])
 
-        y = np.array(['A', 'B'])
+        y = np.array(["A", "B"])
 
         clf.fit(X, y)
-        np.testing.assert_array_equal(clf.classes_, np.array(['A', 'B']))
+        np.testing.assert_array_equal(clf.classes_, np.array(["A", "B"]))
 
     def test_fit_two_classes_imbalanced(self):
         """Check that fitting with two classes works with unequal samples."""
         clf = RVC()
 
-        X = np.array([
-            [1, 2],
-            [1, 4],
-            [4, 2],
-            [2, 1],
-            [3, 1.5],
+        X = np.array(
+            [
+                [1, 2],
+                [1, 4],
+                [4, 2],
+                [2, 1],
+                [3, 1.5],
+            ]
+        )
 
-        ])
-
-        y = np.array(['A', 'A', 'B', 'B', 'B'])
+        y = np.array(["A", "A", "B", "B", "B"])
         clf.fit(X, y)
-        np.testing.assert_array_equal(clf.classes_, np.array(['A', 'B']))
+        np.testing.assert_array_equal(clf.classes_, np.array(["A", "B"]))
 
     def test_fit_three_classes(self):
         """Check that fitting with three classes uses OneVSOne."""
         clf = RVC()
 
-        X = np.array([
-            [1, 2],
-            [2, 1],
-            [2, 2]
-        ])
+        X = np.array([[1, 2], [2, 1], [2, 2]])
 
-        y = np.array(['A', 'B', 'C'])
+        y = np.array(["A", "B", "C"])
 
         clf.fit(X, y)
         self.assertIsInstance(clf.multi_, OneVsOneClassifier)
-        np.testing.assert_array_equal(clf.classes_, np.array(['A', 'B', 'C']))
+        np.testing.assert_array_equal(clf.classes_, np.array(["A", "B", "C"]))
 
     def test_predict_two_classes(self):
         """Check that predict works with two classes."""
-        clf = RVC(kernel='linear')
+        clf = RVC(kernel="linear")
 
-        X = np.array([
-            [2, 1],
-            [1, 2],
-        ])
+        X = np.array(
+            [
+                [2, 1],
+                [1, 2],
+            ]
+        )
 
-        y = np.array(['A', 'B'])
+        y = np.array(["A", "B"])
 
         clf.fit(X, y)
 
         prediction = clf.predict(np.array([[0, 3]]))
-        np.testing.assert_array_equal(prediction, np.array(['A']))
+        np.testing.assert_array_equal(prediction, np.array(["A"]))
 
     def test_predict_three_classes(self):
         """Check predict works with three classes."""
-        clf = RVC(kernel='linear')
+        clf = RVC(kernel="linear")
 
-        X = np.array([
-            [5, 5],
-            [5, -5],
-            [-5, 0]
-        ])
+        X = np.array([[5, 5], [5, -5], [-5, 0]])
 
-        y = np.array(['A', 'B', 'C'])
+        y = np.array(["A", "B", "C"])
 
         clf.fit(X, y)
 
         prediction = clf.predict(np.array([[10, 10]]))
-        np.testing.assert_array_equal(prediction, np.array(['A']))
+        np.testing.assert_array_equal(prediction, np.array(["A"]))
 
     def test_classification_two_classes(self):
         """Check classification works with two classes."""

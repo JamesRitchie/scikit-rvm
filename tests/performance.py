@@ -1,6 +1,5 @@
 import timeit
 
-
 # Time classification with the iris dataset.
 
 setup = """

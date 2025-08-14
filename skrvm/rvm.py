@@ -1,21 +1,15 @@
 """Relevance Vector Machine classes for regression and classification."""
-import numpy as np
 
+import numpy as np
 from scipy.optimize import minimize
 from scipy.special import expit
-
-from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
-from sklearn.metrics.pairwise import (
-    linear_kernel,
-    rbf_kernel,
-    polynomial_kernel
-)
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
+from sklearn.metrics.pairwise import linear_kernel, polynomial_kernel, rbf_kernel
 from sklearn.multiclass import OneVsOneClassifier
 from sklearn.utils.validation import check_X_y
 
 
 class BaseRVM(BaseEstimator):
-
     """Base Relevance Vector Machine class.
 
     Implementation of Mike Tipping's Relevance Vector Machine using the
@@ -25,7 +19,7 @@ class BaseRVM(BaseEstimator):
 
     def __init__(
         self,
-        kernel='rbf',
+        kernel="rbf",
         degree=3,
         coef1=None,
         coef0=0.0,
@@ -33,10 +27,10 @@ class BaseRVM(BaseEstimator):
         tol=1e-3,
         alpha=1e-6,
         threshold_alpha=1e9,
-        beta=1.e-6,
+        beta=1.0e-6,
         beta_fixed=False,
         bias_used=True,
-        verbose=False
+        verbose=False,
     ):
         """Copy params to object properties, no validation."""
         self.kernel = kernel
@@ -55,18 +49,18 @@ class BaseRVM(BaseEstimator):
     def get_params(self, deep=True):
         """Return parameters as a dictionary."""
         params = {
-            'kernel': self.kernel,
-            'degree': self.degree,
-            'coef1': self.coef1,
-            'coef0': self.coef0,
-            'n_iter': self.n_iter,
-            'tol': self.tol,
-            'alpha': self.alpha,
-            'threshold_alpha': self.threshold_alpha,
-            'beta': self.beta,
-            'beta_fixed': self.beta_fixed,
-            'bias_used': self.bias_used,
-            'verbose': self.verbose
+            "kernel": self.kernel,
+            "degree": self.degree,
+            "coef1": self.coef1,
+            "coef0": self.coef0,
+            "n_iter": self.n_iter,
+            "tol": self.tol,
+            "alpha": self.alpha,
+            "threshold_alpha": self.threshold_alpha,
+            "beta": self.beta,
+            "beta_fixed": self.beta_fixed,
+            "bias_used": self.bias_used,
+            "verbose": self.verbose,
         }
         return params
 
@@ -77,23 +71,27 @@ class BaseRVM(BaseEstimator):
         return self
 
     def _apply_kernel(self, x, y):
-        """Apply the selected kernel function to the data."""
-        if self.kernel == 'linear':
+        """Apply the selected kernel function to the data.
+
+        Ensures inputs are 2D to satisfy newer scikit-learn pairwise APIs
+        when users pass a single sample as a 1D array.
+        """
+        if isinstance(x, np.ndarray) and x.ndim == 1:
+            x = x.reshape(1, -1)
+        if self.kernel == "linear":
             phi = linear_kernel(x, y)
-        elif self.kernel == 'rbf':
+        elif self.kernel == "rbf":
             phi = rbf_kernel(x, y, self.coef1)
-        elif self.kernel == 'poly':
+        elif self.kernel == "poly":
             phi = polynomial_kernel(x, y, self.degree, self.coef1, self.coef0)
         elif callable(self.kernel):
             phi = self.kernel(x, y)
             if len(phi.shape) != 2:
-                raise ValueError(
-                    "Custom kernel function did not return 2D matrix"
-                )
+                raise ValueError("Custom kernel function did not return 2D matrix")
             if phi.shape[0] != x.shape[0]:
                 raise ValueError(
                     "Custom kernel function did not return matrix with rows"
-                    " equal to number of data points."""
+                    " equal to number of data points."
                 )
         else:
             raise ValueError("Kernel selection is invalid.")
@@ -149,12 +147,13 @@ class BaseRVM(BaseEstimator):
         for i in range(self.n_iter):
             self._posterior()
 
-            self.gamma = 1 - self.alpha_*np.diag(self.sigma_)
-            self.alpha_ = self.gamma/(self.m_ ** 2)
+            self.gamma = 1 - self.alpha_ * np.diag(self.sigma_)
+            self.alpha_ = self.gamma / (self.m_**2)
 
             if not self.beta_fixed:
-                self.beta_ = (n_samples - np.sum(self.gamma))/(
-                    np.sum((y - np.dot(self.phi, self.m_)) ** 2))
+                self.beta_ = (n_samples - np.sum(self.gamma)) / (
+                    np.sum((y - np.dot(self.phi, self.m_)) ** 2)
+                )
 
             self._prune()
 
@@ -183,7 +182,6 @@ class BaseRVM(BaseEstimator):
 
 
 class RVR(BaseRVM, RegressorMixin):
-
     """Relevance Vector Machine Regression.
 
     Implementation of Mike Tipping's Relevance Vector Machine for regression
@@ -198,19 +196,23 @@ class RVR(BaseRVM, RegressorMixin):
 
     def predict(self, X, eval_MSE=False):
         """Evaluate the RVR model at x."""
+        single_sample = isinstance(X, np.ndarray) and X.ndim == 1
         phi = self._apply_kernel(X, self.relevance_)
 
         y = np.dot(phi, self.m_)
 
         if eval_MSE:
-            MSE = (1/self.beta_) + np.dot(phi, np.dot(self.sigma_, phi.T))
+            MSE = (1 / self.beta_) + np.dot(phi, np.dot(self.sigma_, phi.T))
+            if single_sample:
+                return y[0], MSE[0, 0]
             return y, MSE[:, 0]
         else:
+            if single_sample:
+                return y[0]
             return y
 
 
 class RVC(BaseRVM, ClassifierMixin):
-
     """Relevance Vector Machine Classification.
 
     Implementation of Mike Tipping's Relevance Vector Machine for
@@ -225,27 +227,25 @@ class RVC(BaseRVM, ClassifierMixin):
     def get_params(self, deep=True):
         """Return parameters as a dictionary."""
         params = super(RVC, self).get_params(deep=deep)
-        params['n_iter_posterior'] = self.n_iter_posterior
+        params["n_iter_posterior"] = self.n_iter_posterior
         return params
 
     def _classify(self, m, phi):
         return expit(np.dot(phi, m))
 
     def _log_posterior(self, m, alpha, phi, t):
-
         y = self._classify(m, phi)
 
-        log_p = -1 * (np.sum(np.log(y[t == 1]), 0) +
-                      np.sum(np.log(1-y[t == 0]), 0))
-        log_p = log_p + 0.5*np.dot(m.T, np.dot(np.diag(alpha), m))
+        log_p = -1 * (np.sum(np.log(y[t == 1]), 0) + np.sum(np.log(1 - y[t == 0]), 0))
+        log_p = log_p + 0.5 * np.dot(m.T, np.dot(np.diag(alpha), m))
 
-        jacobian = np.dot(np.diag(alpha), m) - np.dot(phi.T, (t-y))
+        jacobian = np.dot(np.diag(alpha), m) - np.dot(phi.T, (t - y))
 
         return log_p, jacobian
 
     def _hessian(self, m, alpha, phi, t):
         y = self._classify(m, phi)
-        B = np.diag(y*(1-y))
+        B = np.diag(y * (1 - y))
         return np.diag(alpha) + np.dot(phi.T, np.dot(B, phi))
 
     def _posterior(self):
@@ -254,17 +254,13 @@ class RVC(BaseRVM, ClassifierMixin):
             hess=self._hessian,
             x0=self.m_,
             args=(self.alpha_, self.phi, self.t),
-            method='Newton-CG',
+            method="Newton-CG",
             jac=True,
-            options={
-                'maxiter': self.n_iter_posterior
-            }
+            options={"maxiter": self.n_iter_posterior},
         )
 
         self.m_ = result.x
-        self.sigma_ = np.linalg.inv(
-            self._hessian(self.m_, self.alpha_, self.phi, self.t)
-        )
+        self.sigma_ = np.linalg.inv(self._hessian(self.m_, self.alpha_, self.phi, self.t))
 
     def fit(self, X, y):
         """Check target values and fit model."""
@@ -287,7 +283,7 @@ class RVC(BaseRVM, ClassifierMixin):
         """Return an array of class probabilities."""
         phi = self._apply_kernel(X, self.relevance_)
         y = self._classify(self.m_, phi)
-        return np.column_stack((1-y, y))
+        return np.column_stack((1 - y, y))
 
     def predict(self, X):
         """Return an array of classes for each input."""
