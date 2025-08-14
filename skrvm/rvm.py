@@ -92,7 +92,6 @@ class BaseRVM(BaseEstimator):
                 raise ValueError(
                     "Custom kernel function did not return matrix with rows"
                     " equal to number of data points."
-                    ""
                 )
         else:
             raise ValueError("Kernel selection is invalid.")
