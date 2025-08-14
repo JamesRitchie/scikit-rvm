@@ -327,12 +327,6 @@ dependencies = [
     { name = "scipy", version = "1.16.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
 
-[package.optional-dependencies]
-dev = [
-    { name = "coverage" },
-    { name = "ruff" },
-]
-
 [package.dev-dependencies]
 dev = [
     { name = "coverage" },
@@ -341,13 +335,10 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "coverage", marker = "extra == 'dev'", specifier = ">=7" },
     { name = "numpy", specifier = ">=2.0" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.5" },
-    { name = "scikit-learn", specifier = ">=1.4" },
-    { name = "scipy", specifier = ">=1.11" },
+    { name = "scikit-learn", specifier = ">=1.5" },
+    { name = "scipy", specifier = ">=1.12" },
 ]
-provides-extras = ["dev"]
 
 [package.metadata.requires-dev]
 dev = [
